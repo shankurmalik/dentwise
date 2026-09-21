@@ -34,17 +34,32 @@ async function getOrCreateDatabaseUser() {
     throw new Error("Your Clerk account does not have an email address");
   }
 
-  const user = await prisma.user.upsert({
+  const existingUser = await prisma.user.findFirst({
     where: {
-      clerkId: userId,
+      OR: [
+        { clerkId: userId },
+        { email },
+      ],
     },
-    update: {
-      email,
-      firstName: clerkUser.firstName,
-      lastName: clerkUser.lastName,
-      phone: clerkUser.phoneNumbers[0]?.phoneNumber ?? null,
-    },
-    create: {
+  });
+
+  if (existingUser) {
+    return prisma.user.update({
+      where: {
+        id: existingUser.id,
+      },
+      data: {
+        clerkId: userId,
+        email,
+        firstName: clerkUser.firstName,
+        lastName: clerkUser.lastName,
+        phone: clerkUser.phoneNumbers[0]?.phoneNumber ?? null,
+      },
+    });
+  }
+
+  return prisma.user.create({
+    data: {
       clerkId: userId,
       email,
       firstName: clerkUser.firstName,
@@ -52,8 +67,6 @@ async function getOrCreateDatabaseUser() {
       phone: clerkUser.phoneNumbers[0]?.phoneNumber ?? null,
     },
   });
-
-  return user;
 }
 
 export async function getAppointments() {

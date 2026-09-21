@@ -101,12 +101,7 @@ export async function getUserAppointments() {
 
 export async function getUserAppointmentStats() {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("You must be authenticated");
-
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } });
-
-    if (!user) throw new Error("User not found");
+    const user = await getOrCreateDatabaseUser();
 
     // these calls will run in parallel, instead of waiting each other
     const [totalCount, completedCount] = await Promise.all([
@@ -167,8 +162,7 @@ export async function bookAppointment(input: BookAppointmentInput) {
       throw new Error("Doctor, date, and time are required");
     }
 
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } });
-    if (!user) throw new Error("User not found. Please ensure your account is properly set up.");
+    const user = await getOrCreateDatabaseUser();
 
     const appointment = await prisma.appointment.create({
       data: {

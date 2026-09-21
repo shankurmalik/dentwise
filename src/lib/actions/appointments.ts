@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "../prisma";
 import { AppointmentStatus } from "@prisma/client";
 
@@ -13,6 +13,47 @@ function transformAppointment(appointment: any) {
     doctorImageUrl: appointment.doctor.imageUrl || "",
     date: appointment.date.toISOString().split("T")[0],
   };
+}
+
+async function getOrCreateDatabaseUser() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("You must be logged in");
+  }
+
+  const clerkUser = await currentUser();
+
+  if (!clerkUser) {
+    throw new Error("Unable to fetch Clerk user");
+  }
+
+  const email = clerkUser.emailAddresses[0]?.emailAddress;
+
+  if (!email) {
+    throw new Error("Your Clerk account does not have an email address");
+  }
+
+  const user = await prisma.user.upsert({
+    where: {
+      clerkId: userId,
+    },
+    update: {
+      email,
+      firstName: clerkUser.firstName,
+      lastName: clerkUser.lastName,
+      phone: clerkUser.phoneNumbers[0]?.phoneNumber ?? null,
+    },
+    create: {
+      clerkId: userId,
+      email,
+      firstName: clerkUser.firstName,
+      lastName: clerkUser.lastName,
+      phone: clerkUser.phoneNumbers[0]?.phoneNumber ?? null,
+    },
+  });
+
+  return user;
 }
 
 export async function getAppointments() {
@@ -40,13 +81,7 @@ export async function getAppointments() {
 
 export async function getUserAppointments() {
   try {
-    // get authenticated user from Clerk
-    const { userId } = await auth();
-    if (!userId) throw new Error("You must be logged in to view appointments");
-
-    // find user by clerkId from authenticated session
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } });
-    if (!user) throw new Error("User not found. Please ensure your account is properly set up.");
+    const user = await getOrCreateDatabaseUser();
 
     const appointments = await prisma.appointment.findMany({
       where: { userId: user.id },

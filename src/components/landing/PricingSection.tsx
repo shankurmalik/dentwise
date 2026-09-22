@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { SignUpButton } from "@clerk/nextjs";
+import Link from "next/link";
 import { CheckCircleIcon } from "lucide-react";
 
 function PricingSection() {
@@ -102,9 +103,11 @@ function PricingSection() {
                   <p className="text-muted-foreground">AI consultations + appointment booking</p>
                 </div>
 
-                <Button className="w-full py-3 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/95 hover:to-primary/85 text-primary-foreground rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
-                  Start AI Basic
-                </Button>
+                <Link href="/pro" className="block">
+                  <Button className="w-full py-3 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/95 hover:to-primary/85 text-primary-foreground rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+                    Start AI Basic
+                  </Button>
+                </Link>
 
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
@@ -149,12 +152,14 @@ function PricingSection() {
                   <p className="text-muted-foreground">Unlimited AI consultations</p>
                 </div>
 
-                <Button
-                  variant="outline"
-                  className="w-full py-3 border-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5 rounded-xl font-semibold transition-all duration-300"
-                >
-                  Upgrade to AI Pro
-                </Button>
+                <Link href="/pro" className="block">
+                  <Button
+                    variant="outline"
+                    className="w-full py-3 border-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5 rounded-xl font-semibold transition-all duration-300"
+                  >
+                    Upgrade to AI Pro
+                  </Button>
+                </Link>
 
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">

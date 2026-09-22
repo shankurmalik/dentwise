@@ -86,7 +86,7 @@ function Footer() {
         </div>
 
         <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 DentWise. Built for real people with real dental questions.</p>
+          <p>&copy; 2026 DentWise. Made with ❤️ by Shankur Malik.</p>
         </div>
       </div>
     </footer>

@@ -1,7 +1,13 @@
 "use client";
 
 import { UserButton, useUser } from "@clerk/nextjs";
-import { CalendarIcon, CrownIcon, HomeIcon, MicIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  CrownIcon,
+  HomeIcon,
+  MicIcon,
+  ShieldCheckIcon,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -60,6 +66,20 @@ function Navbar() {
               <CrownIcon className="w-4 h-4" />
               <span className="hidden md:inline">Pro</span>
             </Link>
+                        {user?.emailAddresses?.[0]?.emailAddress ===
+                          process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+                          <Link
+                            href="/admin"
+                            className={`flex items-center gap-2 transition-colors hover:text-foreground ${
+                              pathname === "/admin"
+                                ? "text-foreground font-medium"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            <ShieldCheckIcon className="w-4 h-4" />
+                            <span className="hidden md:inline">Admin</span>
+                          </Link>
+                        )}
           </div>
         </div>
 

@@ -1,13 +1,16 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   bookAppointment,
   getAppointments,
   getBookedTimeSlots,
+  getDentistAppointments,
   getUserAppointments,
+  reportDentistCompletion,
+  reportPatientCompletion,
   updateAppointmentStatus,
 } from "@/lib/actions/appointments";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function useGetAppointments() {
   const result = useQuery({
@@ -57,5 +60,31 @@ export function useUpdateAppointmentStatus() {
       queryClient.invalidateQueries({ queryKey: ["getAppointments"] });
     },
     onError: (error) => console.error("Failed to update appointment:", error),
+  });
+}
+
+export function useDentistAppointments(enabled = true) {
+  return useQuery({
+    queryKey: ["dentistAppointments"],
+    queryFn: getDentistAppointments,
+    enabled,
+  });
+}
+
+export function useReportDentistCompletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: reportDentistCompletion,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["dentistAppointments"] }),
+  });
+}
+
+export function useReportPatientCompletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: reportPatientCompletion,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["getUserAppointments"] }),
   });
 }

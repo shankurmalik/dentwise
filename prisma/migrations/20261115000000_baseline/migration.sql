@@ -1,0 +1,3 @@
+-- Baseline for the existing DentWise development database.
+-- The pre-existing users, doctors, and appointments schema was introspected
+-- before this migration history was created, so no SQL is required here.

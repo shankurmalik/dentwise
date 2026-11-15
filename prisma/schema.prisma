@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,72 +7,167 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id        String @id @default(cuid())
-  clerkId   String @unique
-  email     String @unique
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
   firstName String?
   lastName  String?
   phone     String?
-  createdAt DateTime @default(now()) // member since sep 2025
+  role      UserRole @default(PATIENT)
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // relationships
-  appointments Appointment[]
+  appointments  Appointment[]
+  doctorProfile Doctor?
 
   @@map("users")
 }
 
 model Doctor {
-  id          String   @id @default(cuid())
-  name        String
-  email       String   @unique
-  phone       String
-  speciality  String
-  bio         String?
-  imageUrl    String
-  gender      Gender
-  isActive    Boolean @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String         @id @default(cuid())
+  userId          String?        @unique
+  name            String
+  email           String         @unique
+  phone           String
+  speciality      String
+  bio             String?
+  imageUrl        String
+  gender          Gender
+  isActive        Boolean        @default(true)
+  approvalStatus  DoctorApproval @default(APPROVED)
+  licenseNumber   String?
+  clinicAddress   String?
+  consultationFee Decimal        @default(0) @db.Decimal(10, 2)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-  // relationships
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   appointments Appointment[]
+  commissions  Commission[]
 
   @@map("doctors")
-
 }
 
 model Appointment {
-  id          String            @id @default(cuid())
-  date        DateTime
-  time        String // store time as string i.e. 14:30
-  duration    Int               @default(30) // duration in minutes
-  status      AppointmentStatus @default(CONFIRMED)
-  notes       String?
-  reason      String? // reason for appointment - teeth cleaning? emergency visit? etc.
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id                    String             @id @default(cuid())
+  date                  DateTime
+  time                  String
+  duration              Int                @default(30)
+  status                AppointmentStatus  @default(PENDING)
+  notes                 String?
+  reason                String?
+  consultationFee       Decimal            @default(0) @db.Decimal(10, 2)
+  actualAmountCollected Decimal?           @db.Decimal(10, 2)
+  paymentMethod         PaymentMethod?
+  dentistReportedAmount Decimal?           @db.Decimal(10, 2)
+  dentistPaymentMethod  PaymentMethod?
+  dentistReportedAt     DateTime?
+  patientReportedAmount Decimal?           @db.Decimal(10, 2)
+  patientPaymentMethod  PaymentMethod?
+  patientReportedAt     DateTime?
+  verificationStatus    VerificationStatus @default(NOT_STARTED)
+  dentistConfirmedAt    DateTime?
+  patientConfirmedAt    DateTime?
+  verificationDeadline  DateTime?
+  patientReminderSentAt DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
-  // foreign keys
-  userId String
+  userId   String
   doctorId String
 
-  // relationships
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  doctor Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctor     Doctor              @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  commission Commission?
+  events     VerificationEvent[]
 
   @@map("appointments")
 }
 
+model Commission {
+  id               String           @id @default(cuid())
+  appointmentId    String           @unique
+  doctorId         String
+  collectedAmount  Decimal          @db.Decimal(10, 2)
+  commissionRate   Decimal          @db.Decimal(5, 4)
+  commissionAmount Decimal          @db.Decimal(10, 2)
+  status           CommissionStatus @default(DUE)
+  settledAt        DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  doctor      Doctor      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@map("commissions")
+}
+
+model CommissionSetting {
+  id        String   @id @default("default")
+  rate      Decimal  @db.Decimal(5, 4)
+  updatedAt DateTime @updatedAt
+
+  @@map("commission_settings")
+}
+
+model VerificationEvent {
+  id            String   @id @default(cuid())
+  appointmentId String
+  actorUserId   String?
+  eventType     String
+  details       Json?
+  createdAt     DateTime @default(now())
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([appointmentId])
+  @@map("verification_events")
+}
+
+enum UserRole {
+  PATIENT
+  DENTIST
+  ADMIN
+}
 
 enum Gender {
   MALE
   FEMALE
 }
 
+enum DoctorApproval {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
 enum AppointmentStatus {
- CONFIRMED
- COMPLETED
+  PENDING
+  CONFIRMED
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum VerificationStatus {
+  NOT_STARTED
+  AWAITING_PATIENT
+  VERIFIED
+  DISPUTED
+  EXPIRED
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  CARD
+  OTHER
+}
+
+enum CommissionStatus {
+  DUE
+  SETTLED
+  DISPUTED
 }

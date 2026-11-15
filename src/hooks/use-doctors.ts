@@ -1,30 +1,33 @@
 "use client";
 
-import { createDoctor, getAvailableDoctors, getDoctors, updateDoctor } from "@/lib/actions/doctors";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  createDoctor,
+  getAvailableDoctors,
+  getDoctors,
+  getMyDentistProfile,
+  registerDentist,
+  reviewDentistApplication,
+  updateDoctor,
+} from "@/lib/actions/doctors";
 
 export function useGetDoctors() {
-  const result = useQuery({
+  return useQuery({
     queryKey: ["getDoctors"],
     queryFn: getDoctors,
   });
-
-  return result;
 }
 
 export function useCreateDoctor() {
   const queryClient = useQueryClient();
 
-  const result = useMutation({
+  return useMutation({
     mutationFn: createDoctor,
     onSuccess: () => {
-      // invalidate related queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ["getDoctors"] });
+      queryClient.invalidateQueries({ queryKey: ["getAvailableDoctors"] });
     },
-    onError: (error) => console.log("Error while  creating a doctor"),
   });
-
-  return result;
 }
 
 export function useUpdateDoctor() {
@@ -36,16 +39,43 @@ export function useUpdateDoctor() {
       queryClient.invalidateQueries({ queryKey: ["getDoctors"] });
       queryClient.invalidateQueries({ queryKey: ["getAvailableDoctors"] });
     },
-    onError: (error) => console.error("Failed to update doctor:", error),
   });
 }
 
-// get available doctors for appointments
 export function useAvailableDoctors() {
-  const result = useQuery({
+  return useQuery({
     queryKey: ["getAvailableDoctors"],
     queryFn: getAvailableDoctors,
   });
+}
 
-  return result;
+export function useRegisterDentist() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: registerDentist,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myDentistProfile"] });
+    },
+  });
+}
+
+export function useMyDentistProfile(enabled = true) {
+  return useQuery({
+    queryKey: ["myDentistProfile"],
+    queryFn: getMyDentistProfile,
+    enabled,
+  });
+}
+
+export function useReviewDentistApplication() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: reviewDentistApplication,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getDoctors"] });
+      queryClient.invalidateQueries({ queryKey: ["getAvailableDoctors"] });
+    },
+  });
 }

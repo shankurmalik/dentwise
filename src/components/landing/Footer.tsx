@@ -31,11 +31,6 @@ function Footer() {
               </li>
               <li>
                 <a href="#" className="hover:text-foreground">
-                  Pricing
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-foreground">
                   FAQ
                 </a>
               </li>
